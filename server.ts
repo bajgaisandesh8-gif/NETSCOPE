@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -9,11 +10,13 @@ import { GoogleGenAI } from "@google/genai";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = 3000;
-const PYTHON_PORT = 5001;
+const PORT = Number(process.env.PORT || 3000);
+const PYTHON_PORT = Number(process.env.BACKEND_PORT || 5001);
+const PYTHON_BIN = process.env.PYTHON_BIN || (process.platform === "win32" ? "python" : "python3");
 
 let pythonProcess: ChildProcess | null = null;
 let genAiClient: GoogleGenAI | null = null;
+let shuttingDown = false;
 
 function getGeminiClient(): GoogleGenAI | null {
   if (!process.env.GEMINI_API_KEY) return null;
@@ -24,8 +27,10 @@ function getGeminiClient(): GoogleGenAI | null {
 }
 
 function startPythonBackend(): void {
-  console.log(`[NetScope] Spawning Python Network Engine on port ${PYTHON_PORT}...`);
-  pythonProcess = spawn("python3", ["-m", "backend.app"], {
+  if (shuttingDown) return;
+
+  console.log(`[NetScope] Starting Python Network Engine with ${PYTHON_BIN} on port ${PYTHON_PORT}...`);
+  pythonProcess = spawn(PYTHON_BIN, ["-m", "backend.app"], {
     cwd: process.cwd(),
     env: {
       ...process.env,
@@ -46,19 +51,24 @@ function startPythonBackend(): void {
     if (text) console.error(`[Python Engine Error] ${text}`);
   });
 
+  pythonProcess.on("error", (error) => {
+    console.error(`[NetScope] Failed to start Python Engine: ${error.message}`);
+  });
+
   pythonProcess.on("exit", (code, signal) => {
+    pythonProcess = null;
+    if (shuttingDown) return;
     console.warn(`[NetScope] Python Engine exited with code ${code}, signal ${signal}. Restarting in 2s...`);
     setTimeout(startPythonBackend, 2000);
   });
 }
 
 async function startServer() {
-  // Start Python Network Engine
   startPythonBackend();
 
   const app = express();
 
-  // AI Network Analyst powered by Gemini with strict grounding
+  // AI Network Analyst powered by Gemini with strict telemetry grounding.
   app.post("/api/ai/chat", express.json({ limit: "1mb" }), async (req, res) => {
     const { message, networkContext } = req.body || {};
     if (!message || typeof message !== "string") {
@@ -84,7 +94,6 @@ ${JSON.stringify(networkContext || {}, null, 2)}
 `;
 
     if (!ai) {
-      // Local fallback heuristic response when GEMINI_API_KEY is not configured
       const deviceCount = networkContext?.devices?.length || 0;
       const gw = networkContext?.baseline?.gateway?.ip || "Unknown";
       const score = networkContext?.security?.score ?? 85;
@@ -102,7 +111,7 @@ ${JSON.stringify(networkContext || {}, null, 2)}
 - Hardware interfaces show standard local routing and ICMP responsiveness.
 
 **RECOMMENDATION:**
-1. Configure \`GEMINI_API_KEY\` in your environment or Settings to enable full multimodal AI reasoning.
+1. Configure \`GEMINI_API_KEY\` in your environment or Settings to enable full AI reasoning.
 2. Regularly audit unknown MAC vendor identifiers in the Device Inventory tab.`;
 
       return res.json({
@@ -115,7 +124,7 @@ ${JSON.stringify(networkContext || {}, null, 2)}
     try {
       const response = (await Promise.race([
         ai.models.generateContent({
-          model: "gemini-3.6-flash",
+          model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
           contents: [
             { role: "user", parts: [{ text: `${systemInstructions}\n\nUSER QUERY: ${message}` }] }
           ],
@@ -128,7 +137,7 @@ ${JSON.stringify(networkContext || {}, null, 2)}
       const replyText = response.text || "No analysis could be generated.";
       return res.json({
         reply: replyText,
-        model: "gemini-3.6-flash",
+        model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
         grounded: true,
       });
     } catch (err: unknown) {
@@ -136,12 +145,12 @@ ${JSON.stringify(networkContext || {}, null, 2)}
       const errMessage = err instanceof Error ? err.message : String(err);
       return res.status(500).json({
         error: `AI generation failure: ${errMessage}`,
-        model: "gemini-3.6-flash",
+        model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
       });
     }
   });
 
-  // Proxy API and Socket.IO to Python Flask backend
+  // Proxy API and Socket.IO to the local Python network engine.
   const pythonProxy = createProxyMiddleware({
     target: `http://127.0.0.1:${PYTHON_PORT}`,
     changeOrigin: true,
@@ -151,17 +160,15 @@ ${JSON.stringify(networkContext || {}, null, 2)}
 
   app.use(pythonProxy);
 
-  // Health fallback endpoint
   app.get("/server-health", (_req, res) => {
     res.json({
       status: "ok",
       server: "Node Express Proxy",
-      python_pid: pythonProcess?.pid,
+      python_pid: pythonProcess?.pid ?? null,
       timestamp: new Date().toISOString(),
     });
   });
 
-  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -180,7 +187,6 @@ ${JSON.stringify(networkContext || {}, null, 2)}
     console.log(`[NetScope] Server running on http://0.0.0.0:${PORT}`);
   });
 
-  // Support WebSocket upgrades for Socket.IO
   server.on("upgrade", (req, socket, head) => {
     if (req.url?.startsWith("/socket.io")) {
       // @ts-expect-error http-proxy-middleware upgrade handle
@@ -188,13 +194,15 @@ ${JSON.stringify(networkContext || {}, null, 2)}
     }
   });
 
-  // Process cleanup
   const cleanup = () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     if (pythonProcess) {
       console.log("[NetScope] Terminating Python process...");
       pythonProcess.kill("SIGTERM");
     }
-    process.exit(0);
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 3000).unref();
   };
 
   process.on("SIGINT", cleanup);
