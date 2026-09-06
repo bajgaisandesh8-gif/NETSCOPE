@@ -1,8 +1,30 @@
+# Node / frontend
 node_modules/
-build/
 dist/
+build/
 coverage/
-.DS_Store
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Local runtime state
+backend/data/*.json
+!backend/data/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Environment / secrets
 .env*
 !.env.example
