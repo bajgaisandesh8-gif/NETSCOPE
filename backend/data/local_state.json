@@ -1,0 +1,134 @@
+{
+  "networks": [],
+  "devices": [
+    {
+      "id": "127.0.0.1",
+      "ip": "127.0.0.1",
+      "mac_address": "00:00:00:00:00:00",
+      "mac_confidence": "Detected",
+      "hostname": "localhost",
+      "hostname_confidence": "Detected",
+      "vendor": "Unknown Vendor",
+      "vendor_confidence": "Unknown",
+      "device_type": "Server / Node",
+      "type_confidence": "Likely",
+      "is_gateway": false,
+      "is_online": true,
+      "first_seen": "2026-09-06T16:02:17.782831+00:00",
+      "last_seen": "2026-09-06T16:02:17.782831+00:00",
+      "services": [
+        {
+          "port": 8080,
+          "protocol": "tcp",
+          "service": "HTTP-Proxy",
+          "state": "open",
+          "confidence": "Detected"
+        }
+      ],
+      "observation_count": 1
+    }
+  ],
+  "network_snapshots": [],
+  "device_events": [
+    {
+      "id": "evt-1788710468881-0",
+      "event_type": "NEW_DEVICE",
+      "severity": "info",
+      "device_id": "127.0.0.1",
+      "details": {
+        "ip": "127.0.0.1",
+        "mac": "00:00:00:00:00:00",
+        "vendor": "Unknown Vendor",
+        "type": "Server / Node"
+      },
+      "timestamp": "2026-09-06T16:01:08.881324+00:00"
+    },
+    {
+      "id": "evt-1788710471725-0",
+      "event_type": "NEW_DEVICE",
+      "severity": "info",
+      "device_id": "127.0.0.1",
+      "details": {
+        "ip": "127.0.0.1",
+        "mac": "00:00:00:00:00:00",
+        "vendor": "Unknown Vendor",
+        "type": "Server / Node"
+      },
+      "timestamp": "2026-09-06T16:01:11.725559+00:00"
+    },
+    {
+      "id": "evt-1788710472368-0",
+      "event_type": "NEW_DEVICE",
+      "severity": "info",
+      "device_id": "127.0.0.1",
+      "details": {
+        "ip": "127.0.0.1",
+        "mac": "00:00:00:00:00:00",
+        "vendor": "Unknown Vendor",
+        "type": "Server / Node"
+      },
+      "timestamp": "2026-09-06T16:01:12.368976+00:00"
+    },
+    {
+      "id": "evt-1788710485170-0",
+      "event_type": "NEW_DEVICE",
+      "severity": "info",
+      "device_id": "127.0.0.1",
+      "details": {
+        "ip": "127.0.0.1",
+        "mac": "00:00:00:00:00:00",
+        "vendor": "Unknown Vendor",
+        "type": "Server / Node"
+      },
+      "timestamp": "2026-09-06T16:01:25.170415+00:00"
+    },
+    {
+      "id": "evt-1788710485846-0",
+      "event_type": "NEW_DEVICE",
+      "severity": "info",
+      "device_id": "127.0.0.1",
+      "details": {
+        "ip": "127.0.0.1",
+        "mac": "00:00:00:00:00:00",
+        "vendor": "Unknown Vendor",
+        "type": "Server / Node"
+      },
+      "timestamp": "2026-09-06T16:01:25.846789+00:00"
+    },
+    {
+      "id": "evt-1788710537082-0",
+      "event_type": "NEW_DEVICE",
+      "severity": "info",
+      "device_id": "127.0.0.1",
+      "details": {
+        "ip": "127.0.0.1",
+        "mac": "00:00:00:00:00:00",
+        "vendor": "Unknown Vendor",
+        "type": "Server / Node"
+      },
+      "timestamp": "2026-09-06T16:02:17.082480+00:00"
+    },
+    {
+      "id": "evt-1788710537783-0",
+      "event_type": "NEW_DEVICE",
+      "severity": "info",
+      "device_id": "127.0.0.1",
+      "details": {
+        "ip": "127.0.0.1",
+        "mac": "00:00:00:00:00:00",
+        "vendor": "Unknown Vendor",
+        "type": "Server / Node"
+      },
+      "timestamp": "2026-09-06T16:02:17.783695+00:00"
+    }
+  ],
+  "diagnostic_results": [],
+  "security_observations": [],
+  "user_settings": {
+    "scan_throttle_seconds": 60,
+    "monitoring_interval_seconds": 30,
+    "enable_cloud_sync": true,
+    "theme": "dark"
+  },
+  "updated_at": "2026-09-06T16:02:17.784407"
+}
